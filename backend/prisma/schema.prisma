@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  githubId  String?  @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  repositories Repository[]
+  reviews      Review[]
+
+  @@map("users")
+}
+
+model Repository {
+  id          String   @id @default(cuid())
+  name        String
+  fullName    String   @unique
+  githubId    Int      @unique
+  owner       String
+  private     Boolean  @default(false)
+  webhookId   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  pullRequests PullRequest[]
+
+  @@map("repositories")
+}
+
+model PullRequest {
+  id          String   @id @default(cuid())
+  number      Int
+  title       String
+  githubId    Int      @unique
+  state       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id])
+  reviews      Review[]
+
+  @@unique([repositoryId, number])
+  @@map("pull_requests")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  status    String   // 'pending', 'completed', 'failed'
+  summary   String?
+  score     Int?     // 1-100 quality score
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  comments      Comment[]
+
+  @@map("reviews")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  filePath  String?
+  lineNumber Int?
+  type      String   // 'security', 'performance', 'style', 'logic'
+  severity  String   // 'low', 'medium', 'high'
+  createdAt DateTime @default(now())
+
+  // Relations
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id])
+
+  @@map("comments")
+}
