@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { db } from './services/database';
 
 // Load environment variables
 dotenv.config();
@@ -27,16 +28,19 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
+// Health check endpoint with database status
+app.get('/health', async (req, res) => {
+    const dbHealth = await db.healthCheck();
+
+    res.status(dbHealth.status === 'healthy' ? 200 : 503).json({
+        status: dbHealth.status === 'healthy' ? 'OK' : 'ERROR',
         timestamp: new Date().toISOString(),
-        service: 'DevFlow API'
+        service: 'DevFlow API',
+        database: dbHealth
     });
 });
 
-// API routes 
+// API routes
 app.get('/api/v1/status', (req, res) => {
     res.json({
         message: 'DevFlow API is running',
