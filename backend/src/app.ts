@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { db } from './services/database';
 import { aiService } from './services/aiService';
+import { githubService } from './services/githubService';
 import routes from './routes';
 
 // Load environment variables
@@ -30,12 +31,13 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint with database and AI status
+// Health check endpoint with all service statuses
 app.get('/health', async (req, res) => {
     const dbHealth = await db.healthCheck();
     const aiHealth = await aiService.testConnection();
+    const githubHealth = await githubService.testConnection();
 
-    const overallStatus = dbHealth.status === 'healthy' && aiHealth ? 'OK' : 'ERROR';
+    const overallStatus = dbHealth.status === 'healthy' && aiHealth && githubHealth ? 'OK' : 'ERROR';
 
     res.status(overallStatus === 'OK' ? 200 : 503).json({
         status: overallStatus,
@@ -45,6 +47,10 @@ app.get('/health', async (req, res) => {
         ai: {
             status: aiHealth ? 'healthy' : 'unhealthy',
             model: process.env.OPENAI_MODEL || 'gpt-4o-mini'
+        },
+        github: {
+            status: githubHealth ? 'healthy' : 'unhealthy',
+            authenticated: !!process.env.GITHUB_TOKEN
         }
     });
 });
