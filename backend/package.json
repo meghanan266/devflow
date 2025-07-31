@@ -18,8 +18,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@octokit/rest": "^22.0.0",
-    "@octokit/webhooks": "^14.1.2",
+    "@octokit/rest": "^19.0.13",
     "@prisma/client": "^6.13.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
