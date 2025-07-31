@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { Request } from 'express';
 import { db } from './database';
+import { codeAnalysisService } from './codeAnalysisService';
 import { PullRequestWebhookPayload } from '../types/github';
 
 class WebhookService {
@@ -91,7 +92,7 @@ class WebhookService {
             }
 
             // Create a pending review
-            await db.createReview({
+            const review = await db.createReview({
                 status: 'pending',
                 pullRequestId: pr.id,
                 userId: user.id
@@ -99,7 +100,14 @@ class WebhookService {
 
             console.log(`Successfully processed PR event for: ${repository.full_name}#${pull_request.number}`);
 
-            // TODO: Queue AI analysis job (next step)
+            // Trigger code analysis
+            console.log('Triggering code analysis...');
+            await codeAnalysisService.processReview({
+                pullRequestId: review.id,
+                repositoryFullName: repository.full_name,
+                pullRequestNumber: pull_request.number,
+                userId: user.id
+            });
 
         } catch (error) {
             console.error('Error processing pull request event:', error);
@@ -107,7 +115,7 @@ class WebhookService {
         }
     }
 
-    // Helper methods
+    // Helper methods remain the same...
     private async ensureUserExists(userData: {
         githubId: string;
         login: string;
@@ -119,11 +127,10 @@ class WebhookService {
             const newUser = await db.createUser({
                 githubId: userData.githubId,
                 name: userData.login,
-                email: `${userData.login}@github.local`, // Placeholder email
+                email: `${userData.login}@github.local`,
                 avatarUrl: userData.avatarUrl
             });
 
-            // Fetch the user with relations to match expected type
             user = await db.getUserByGithubId(userData.githubId);
             console.log(`Created new user: ${userData.login}`);
         }
@@ -143,8 +150,6 @@ class WebhookService {
 
         if (!repo) {
             const newRepo = await db.createRepository(repoData);
-
-            // Fetch the repository with relations to match expected type
             repo = await db.getRepositoryByGithubId(repoData.githubId);
             console.log(`Created new repository: ${repoData.fullName}`);
         }
@@ -163,8 +168,6 @@ class WebhookService {
 
         if (!pr) {
             const newPr = await db.createPullRequest(prData);
-
-            // Fetch the PR with relations to match expected type
             pr = await db.getPullRequestByGithubId(prData.githubId);
             console.log(`Created new pull request: #${prData.number}`);
         }

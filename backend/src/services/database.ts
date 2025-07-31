@@ -92,6 +92,59 @@ class DatabaseService {
         });
     }
 
+    // NEW: Get review with comments
+    async getReviewWithComments(reviewId: string) {
+        return this.prisma.review.findUnique({
+            where: { id: reviewId },
+            include: {
+                comments: {
+                    orderBy: { createdAt: 'asc' }
+                },
+                pullRequest: {
+                    include: {
+                        repository: true
+                    }
+                },
+                user: true
+            }
+        });
+    }
+
+    // NEW: Get repository statistics
+    async getRepositoryStats(repositoryId: string) {
+        const [totalPRs, totalReviews, avgScore] = await Promise.all([
+            this.prisma.pullRequest.count({
+                where: { repositoryId }
+            }),
+            this.prisma.review.count({
+                where: {
+                    pullRequest: {
+                        repositoryId
+                    }
+                }
+            }),
+            this.prisma.review.aggregate({
+                where: {
+                    pullRequest: {
+                        repositoryId
+                    },
+                    score: {
+                        not: null
+                    }
+                },
+                _avg: {
+                    score: true
+                }
+            })
+        ]);
+
+        return {
+            totalPullRequests: totalPRs,
+            totalReviews: totalReviews,
+            averageScore: avgScore._avg.score || 0
+        };
+    }
+
     // Comment operations
     async createComment(data: {
         content: string;
