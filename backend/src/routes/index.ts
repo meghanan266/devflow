@@ -1,14 +1,11 @@
 import { Router } from 'express';
 import webhookRoutes from './webhooks';
+import reviewRoutes from './reviews';
 
 const router = Router();
 
-// Mount webhook routes
+// Mount routes
 router.use('/webhooks', webhookRoutes);
-
-// Future routes will go here
-// router.use('/auth', authRoutes);
-// router.use('/repositories', repositoryRoutes);
-// router.use('/reviews', reviewRoutes);
+router.use('/reviews', reviewRoutes);
 
 export default router;
