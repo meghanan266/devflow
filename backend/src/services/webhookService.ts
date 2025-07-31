@@ -39,7 +39,7 @@ class WebhookService {
     async handlePullRequestEvent(payload: PullRequestWebhookPayload): Promise<void> {
         const { action, pull_request, repository, sender } = payload;
 
-        console.log(`📋 Received PR ${action} event:`, {
+        console.log(`Received PR ${action} event:`, {
             repo: repository.full_name,
             pr: pull_request.number,
             title: pull_request.title
@@ -47,7 +47,7 @@ class WebhookService {
 
         // Only process opened and synchronize events
         if (!['opened', 'synchronize'].includes(action)) {
-            console.log(`⏭️  Skipping action: ${action}`);
+            console.log(`Skipping action: ${action}`);
             return;
         }
 
@@ -97,12 +97,12 @@ class WebhookService {
                 userId: user.id
             });
 
-            console.log(`✅ Successfully processed PR event for: ${repository.full_name}#${pull_request.number}`);
+            console.log(`Successfully processed PR event for: ${repository.full_name}#${pull_request.number}`);
 
             // TODO: Queue AI analysis job (next step)
 
         } catch (error) {
-            console.error('❌ Error processing pull request event:', error);
+            console.error('Error processing pull request event:', error);
             throw error;
         }
     }
@@ -125,7 +125,7 @@ class WebhookService {
 
             // Fetch the user with relations to match expected type
             user = await db.getUserByGithubId(userData.githubId);
-            console.log(`👤 Created new user: ${userData.login}`);
+            console.log(`Created new user: ${userData.login}`);
         }
 
         return user;
@@ -146,7 +146,7 @@ class WebhookService {
 
             // Fetch the repository with relations to match expected type
             repo = await db.getRepositoryByGithubId(repoData.githubId);
-            console.log(`📁 Created new repository: ${repoData.fullName}`);
+            console.log(`Created new repository: ${repoData.fullName}`);
         }
 
         return repo;
@@ -166,7 +166,7 @@ class WebhookService {
 
             // Fetch the PR with relations to match expected type
             pr = await db.getPullRequestByGithubId(prData.githubId);
-            console.log(`🔄 Created new pull request: #${prData.number}`);
+            console.log(`Created new pull request: #${prData.number}`);
         }
 
         return pr;

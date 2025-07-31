@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { db } from './services/database';
+import routes from './routes';
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +42,7 @@ app.get('/health', async (req, res) => {
 });
 
 // API routes
+app.use('/api/v1', routes);
 app.get('/api/v1/status', (req, res) => {
     res.json({
         message: 'DevFlow API is running',
