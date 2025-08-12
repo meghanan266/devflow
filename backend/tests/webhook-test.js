@@ -5,9 +5,9 @@ const samplePayload = {
   action: "opened",
   number: 1,
   pull_request: {
-    id: 123456789,
+    id: 1,
     number: 1,
-    title: "Add new feature",
+    title: "Test DevFlow webhook with real GitHub data",
     state: "open",
     user: {
       id: 987654321,
@@ -26,19 +26,19 @@ const samplePayload = {
     patch_url: "https://github.com/test/repo/pull/1.patch",
   },
   repository: {
-    id: 111222333,
-    name: "test-repo",
-    full_name: "testuser/test-repo",
+    id: 1,
+    name: "devflow",
+    full_name: "meghanan266/devflow",
     owner: {
       id: 987654321,
-      login: "testuser",
+      login: "meghanan266",
       avatar_url: "https://github.com/images/error/testuser_happy.gif",
     },
     private: false,
   },
   sender: {
     id: 987654321,
-    login: "testuser",
+    login: "meghanan266",
     avatar_url: "https://github.com/images/error/testuser_happy.gif",
   },
 };
