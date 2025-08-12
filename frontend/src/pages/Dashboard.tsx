@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import ReviewCard from '../components/ReviewCard';
 import ReviewDetail from '../components/ReviewDetail';
 import { reviewsApi } from '../services/api';
@@ -9,26 +9,37 @@ const Dashboard: React.FC = () => {
     const [selectedReview, setSelectedReview] = useState<Review | null>(null);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Fetch reviews from API
-    useEffect(() => {
-        const fetchReviews = async () => {
-            try {
+    const fetchReviews = async (isRefresh = false) => {
+        try {
+            if (isRefresh) {
+                setRefreshing(true);
+            } else {
                 setLoading(true);
-                setError(null);
-                const fetchedReviews = await reviewsApi.getAllReviews();
-                setReviews(fetchedReviews);
-            } catch (err) {
-                console.error('Failed to fetch reviews:', err);
-                setError('Failed to load reviews. Please try again later.');
-            } finally {
-                setLoading(false);
             }
-        };
+            setError(null);
+            const fetchedReviews = await reviewsApi.getAllReviews();
+            setReviews(fetchedReviews);
+        } catch (err) {
+            console.error('Failed to fetch reviews:', err);
+            setError('Failed to load reviews. Please try again later.');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
+    useEffect(() => {
         fetchReviews();
     }, []);
+
+    // Manual refresh handler
+    const handleRefresh = () => {
+        fetchReviews(true);
+    };
 
     // Calculate stats from real data
     const stats = React.useMemo(() => {
@@ -45,7 +56,7 @@ const Dashboard: React.FC = () => {
 
         return {
             totalReviews,
-            pendingReviews: pendingReviews + processingReviews, // Group pending and processing
+            pendingReviews: pendingReviews + processingReviews,
             completedReviews,
             averageScore
         };
@@ -75,12 +86,23 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Code Review Dashboard</h1>
-                <p className="mt-1 text-sm text-gray-500">
-                    Monitor your pull request reviews and code quality metrics
-                </p>
+            {/* Page Header with Refresh Button */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Code Review Dashboard</h1>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Monitor your pull request reviews and code quality metrics
+                    </p>
+                </div>
+
+                <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    {refreshing ? 'Refreshing...' : 'Refresh'}
+                </button>
             </div>
 
             {/* Stats Cards */}
