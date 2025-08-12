@@ -1,95 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import ReviewCard from '../components/ReviewCard';
 import ReviewDetail from '../components/ReviewDetail';
+import { reviewsApi } from '../services/api';
 import type { Review } from '../types/api';
 
 const Dashboard: React.FC = () => {
     const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Mock data for now - we'll connect to real API later
-    const mockStats = {
-        totalReviews: 2,
-        pendingReviews: 0,
-        completedReviews: 1,
-        averageScore: 85
-    };
+    // Fetch reviews from API
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const fetchedReviews = await reviewsApi.getAllReviews();
+                setReviews(fetchedReviews);
+            } catch (err) {
+                console.error('Failed to fetch reviews:', err);
+                setError('Failed to load reviews. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const mockReviews: Review[] = [
-        {
-            id: '1',
-            status: 'completed',
-            summary: 'Good implementation of user authentication. Minor security improvements suggested.',
-            score: 85,
-            createdAt: '2025-07-31T10:30:00Z',
-            updatedAt: '2025-07-31T10:45:00Z',
-            pullRequest: {
-                id: 'pr1',
-                number: 123,
-                title: 'Add user authentication system',
-                githubId: 123456,
-                state: 'open',
-                createdAt: '2025-07-31T10:30:00Z',
-                updatedAt: '2025-07-31T10:30:00Z',
-                repository: {
-                    id: 'repo1',
-                    name: 'devflow-app',
-                    fullName: 'yourname/devflow-app',
-                    githubId: 111222333,
-                    owner: 'yourname',
-                    private: false,
-                    isActive: true,
-                    createdAt: '2025-07-30T00:00:00Z',
-                    updatedAt: '2025-07-30T00:00:00Z'
-                }
-            },
-            comments: [
-                {
-                    id: 'c1',
-                    content: 'Consider using bcrypt for password hashing',
-                    type: 'security',
-                    severity: 'medium',
-                    createdAt: '2025-07-31T10:45:00Z'
-                },
-                {
-                    id: 'c2',
-                    content: 'Add input validation for email format',
-                    type: 'best-practice',
-                    severity: 'low',
-                    createdAt: '2025-07-31T10:45:00Z'
-                }
-            ]
-        },
-        {
-            id: '2',
-            status: 'processing',
-            summary: undefined,
-            score: undefined,
-            createdAt: '2025-07-31T11:00:00Z',
-            updatedAt: '2025-07-31T11:00:00Z',
-            pullRequest: {
-                id: 'pr2',
-                number: 124,
-                title: 'Fix database connection pooling',
-                githubId: 123457,
-                state: 'open',
-                createdAt: '2025-07-31T11:00:00Z',
-                updatedAt: '2025-07-31T11:00:00Z',
-                repository: {
-                    id: 'repo1',
-                    name: 'devflow-app',
-                    fullName: 'yourname/devflow-app',
-                    githubId: 111222333,
-                    owner: 'yourname',
-                    private: false,
-                    isActive: true,
-                    createdAt: '2025-07-30T00:00:00Z',
-                    updatedAt: '2025-07-30T00:00:00Z'
-                }
-            },
-            comments: []
-        }
-    ];
+        fetchReviews();
+    }, []);
+
+    // Calculate stats from real data
+    const stats = React.useMemo(() => {
+        const totalReviews = reviews.length;
+        const pendingReviews = reviews.filter(r => r.status === 'pending').length;
+        const processingReviews = reviews.filter(r => r.status === 'processing').length;
+        const completedReviews = reviews.filter(r => r.status === 'completed').length;
+        const failedReviews = reviews.filter(r => r.status === 'failed').length;
+
+        const completedWithScores = reviews.filter(r => r.status === 'completed' && r.score);
+        const averageScore = completedWithScores.length > 0
+            ? Math.round(completedWithScores.reduce((sum, r) => sum + (r.score || 0), 0) / completedWithScores.length)
+            : 0;
+
+        return {
+            totalReviews,
+            pendingReviews: pendingReviews + processingReviews, // Group pending and processing
+            completedReviews,
+            averageScore
+        };
+    }, [reviews]);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-64">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading reviews...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center">
+                    <XCircle className="h-5 w-5 text-red-400 mr-2" />
+                    <p className="text-red-700">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -114,7 +97,7 @@ const Dashboard: React.FC = () => {
                                         Pending Reviews
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        {mockStats.pendingReviews}
+                                        {stats.pendingReviews}
                                     </dd>
                                 </dl>
                             </div>
@@ -134,7 +117,7 @@ const Dashboard: React.FC = () => {
                                         Completed Reviews
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        {mockStats.completedReviews}
+                                        {stats.completedReviews}
                                     </dd>
                                 </dl>
                             </div>
@@ -154,7 +137,7 @@ const Dashboard: React.FC = () => {
                                         Total Reviews
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        {mockStats.totalReviews}
+                                        {stats.totalReviews}
                                     </dd>
                                 </dl>
                             </div>
@@ -174,7 +157,7 @@ const Dashboard: React.FC = () => {
                                         Average Score
                                     </dt>
                                     <dd className="text-lg font-medium text-gray-900">
-                                        {mockStats.averageScore}/100
+                                        {stats.averageScore > 0 ? `${stats.averageScore}/100` : 'N/A'}
                                     </dd>
                                 </dl>
                             </div>
@@ -190,7 +173,7 @@ const Dashboard: React.FC = () => {
                         Recent Reviews
                     </h3>
 
-                    {mockReviews.length === 0 ? (
+                    {reviews.length === 0 ? (
                         <div className="text-center py-12">
                             <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
                             <h3 className="mt-2 text-sm font-medium text-gray-900">No reviews yet</h3>
@@ -200,11 +183,12 @@ const Dashboard: React.FC = () => {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {mockReviews.map((review) => (
+                            {reviews.map((review) => (
                                 <ReviewCard
                                     key={review.id}
                                     review={review}
-                                    onClick={() => setSelectedReview(review)}                                />
+                                    onClick={() => setSelectedReview(review)}
+                                />
                             ))}
                         </div>
                     )}
