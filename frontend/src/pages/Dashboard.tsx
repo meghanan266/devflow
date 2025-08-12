@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import ReviewCard from '../components/ReviewCard';
+import ReviewDetail from '../components/ReviewDetail';
 import type { Review } from '../types/api';
 
 const Dashboard: React.FC = () => {
+    const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+
     // Mock data for now - we'll connect to real API later
     const mockStats = {
         totalReviews: 2,
@@ -201,13 +204,20 @@ const Dashboard: React.FC = () => {
                                 <ReviewCard
                                     key={review.id}
                                     review={review}
-                                    onClick={() => console.log('Clicked review:', review.id)}
-                                />
+                                    onClick={() => setSelectedReview(review)}                                />
                             ))}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Review Detail Modal */}
+            {selectedReview && (
+                <ReviewDetail
+                    review={selectedReview}
+                    onClose={() => setSelectedReview(null)}
+                />
+            )}
         </div>
     );
 };
