@@ -1,19 +1,92 @@
 import React from 'react';
 import { Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import ReviewCard from '../components/ReviewCard';
+import type { Review } from '../types/api';
 
 const Dashboard: React.FC = () => {
     // Mock data for now - we'll connect to real API later
     const mockStats = {
-        totalReviews: 0,
+        totalReviews: 2,
         pendingReviews: 0,
-        completedReviews: 0,
-        averageScore: 0
+        completedReviews: 1,
+        averageScore: 85
     };
 
-    const mockReviews = [
-        // Empty for now - we'll add real data later
+    const mockReviews: Review[] = [
+        {
+            id: '1',
+            status: 'completed',
+            summary: 'Good implementation of user authentication. Minor security improvements suggested.',
+            score: 85,
+            createdAt: '2025-07-31T10:30:00Z',
+            updatedAt: '2025-07-31T10:45:00Z',
+            pullRequest: {
+                id: 'pr1',
+                number: 123,
+                title: 'Add user authentication system',
+                githubId: 123456,
+                state: 'open',
+                createdAt: '2025-07-31T10:30:00Z',
+                updatedAt: '2025-07-31T10:30:00Z',
+                repository: {
+                    id: 'repo1',
+                    name: 'devflow-app',
+                    fullName: 'yourname/devflow-app',
+                    githubId: 111222333,
+                    owner: 'yourname',
+                    private: false,
+                    isActive: true,
+                    createdAt: '2025-07-30T00:00:00Z',
+                    updatedAt: '2025-07-30T00:00:00Z'
+                }
+            },
+            comments: [
+                {
+                    id: 'c1',
+                    content: 'Consider using bcrypt for password hashing',
+                    type: 'security',
+                    severity: 'medium',
+                    createdAt: '2025-07-31T10:45:00Z'
+                },
+                {
+                    id: 'c2',
+                    content: 'Add input validation for email format',
+                    type: 'best-practice',
+                    severity: 'low',
+                    createdAt: '2025-07-31T10:45:00Z'
+                }
+            ]
+        },
+        {
+            id: '2',
+            status: 'processing',
+            summary: undefined,
+            score: undefined,
+            createdAt: '2025-07-31T11:00:00Z',
+            updatedAt: '2025-07-31T11:00:00Z',
+            pullRequest: {
+                id: 'pr2',
+                number: 124,
+                title: 'Fix database connection pooling',
+                githubId: 123457,
+                state: 'open',
+                createdAt: '2025-07-31T11:00:00Z',
+                updatedAt: '2025-07-31T11:00:00Z',
+                repository: {
+                    id: 'repo1',
+                    name: 'devflow-app',
+                    fullName: 'yourname/devflow-app',
+                    githubId: 111222333,
+                    owner: 'yourname',
+                    private: false,
+                    isActive: true,
+                    createdAt: '2025-07-30T00:00:00Z',
+                    updatedAt: '2025-07-30T00:00:00Z'
+                }
+            },
+            comments: []
+        }
     ];
-
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -124,7 +197,13 @@ const Dashboard: React.FC = () => {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {/* Review cards will go here */}
+                            {mockReviews.map((review) => (
+                                <ReviewCard
+                                    key={review.id}
+                                    review={review}
+                                    onClick={() => console.log('Clicked review:', review.id)}
+                                />
+                            ))}
                         </div>
                     )}
                 </div>
