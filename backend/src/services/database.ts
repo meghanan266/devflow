@@ -157,6 +157,24 @@ class DatabaseService {
         return this.prisma.comment.create({ data });
     }
 
+    // Get all reviews with related data
+    async getAllReviews() {
+        return this.prisma.review.findMany({
+            include: {
+                comments: {
+                    orderBy: { createdAt: 'asc' }
+                },
+                pullRequest: {
+                    include: {
+                        repository: true
+                    }
+                },
+                user: true
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
     // Health check
     async healthCheck() {
         try {

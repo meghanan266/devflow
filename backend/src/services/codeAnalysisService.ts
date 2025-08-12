@@ -84,6 +84,15 @@ class CodeAnalysisService {
         }
     }
 
+    async getAllReviews() {
+        try {
+            return await db.getAllReviews();
+        } catch (error) {
+            console.error('Failed to fetch all reviews:', error);
+            throw error;
+        }
+    }
+
     async getReviewWithComments(reviewId: string) {
         try {
             // We need to add this method to our database service

@@ -11,6 +11,12 @@ const api = axios.create({
 });
 
 export const reviewsApi = {
+    // Get all reviews
+    getAllReviews: async (): Promise<Review[]> => {
+        const response = await api.get<{ reviews: Review[] }>('/reviews');
+        return response.data.reviews || [];
+    },
+
     // Get a specific review with comments
     getReview: async (reviewId: string): Promise<Review> => {
         const response = await api.get<ApiResponse<Review>>(`/reviews/${reviewId}`);
